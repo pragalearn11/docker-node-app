@@ -1,13 +1,30 @@
-script: |
-  if [ ! -d "docker-node-app" ]; then
-    git clone https://github.com/pragalearn11/docker-node-app.git
-  fi
+name: CI-CD Pipeline
 
-  cd docker-node-app
-  git pull
+on:
+  push:
+    branches: [ "main" ]
 
-  docker stop $(docker ps -q) || true
-  docker rm $(docker ps -aq) || true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-  docker build -t docker-app .
-  docker run -d -p 3000:3000 docker-app
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            if [ ! -d "docker-node-app" ]; then
+              git clone https://github.com/pragalearn11/docker-node-app.git
+            fi
+
+            cd docker-node-app
+            git pull
+
+            docker stop $(docker ps -q) || true
+            docker rm $(docker ps -aq) || true
+
+            docker build -t docker-app .
+            docker run -d -p 3000:3000 docker-app
