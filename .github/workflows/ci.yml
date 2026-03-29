@@ -1,16 +1,13 @@
-name: Docker CI Pipeline
+script: |
+  if [ ! -d "docker-node-app" ]; then
+    git clone https://github.com/pragalearn11/docker-node-app.git
+  fi
 
-on:
-  push:
-    branches: [ "main" ]
+  cd docker-node-app
+  git pull
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  docker stop $(docker ps -q) || true
+  docker rm $(docker ps -aq) || true
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Build Docker Image
-        run: docker build -t docker-app .
+  docker build -t docker-app .
+  docker run -d -p 3000:3000 docker-app
